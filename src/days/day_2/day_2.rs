@@ -1,12 +1,14 @@
 use std::{fs, time::Instant};
 
+use crate::Answer;
+
 enum Instruction{
     Forward(i32),
     Up(i32),
     Down(i32),
 }
 
-pub fn day_2_main() -> String{
+pub fn day_2_main() -> Answer{
     let time_before = Instant::now();
 
     // Parse the file and turn into a vec of "Instructions"
@@ -30,8 +32,8 @@ pub fn day_2_main() -> String{
     for instruction in &contents{
         match instruction{
             Instruction::Forward(x) => horizontal += x,
-            Instruction::Up(x) => depth += x,
-            Instruction::Down(x) => depth -= x,
+            Instruction::Up(x) => depth -= x,
+            Instruction::Down(x) => depth += x,
         }
     }
 
@@ -54,5 +56,5 @@ pub fn day_2_main() -> String{
 
     let duration = Instant::now() - time_before;
 
-    format!("Day 2: Part 1 - {} Part 2 - {} Duration - {}μs", result_part_1, result_part_2, duration.as_micros())
+    Answer{day:2, part_1:result_part_1.to_string(), part_2:result_part_2.to_string(), duration:duration}
 }

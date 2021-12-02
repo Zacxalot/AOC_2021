@@ -1,7 +1,9 @@
 use std::fs;
 use std::time::Instant;
 
-pub fn day_1_main() -> String{
+use crate::Answer;
+
+pub fn day_1_main() -> Answer{
     let time_before = Instant::now();
 
     // Get contents, do lazy unwrap because we know the file is there and the values are all u32.
@@ -22,7 +24,7 @@ pub fn day_1_main() -> String{
 
     let duration = Instant::now() - time_before;
 
-    format!("Day 1: Part 1 - {} Part 2 - {} Duration - {}μs", larger_part_1, larger_part_2, duration.as_micros())
+    Answer{day:1, part_1:larger_part_1.to_string(), part_2:larger_part_2.to_string(), duration:duration}
 }
 
 // Get a sliding window and if the first val is smaller, map to 1, then get the sum.
