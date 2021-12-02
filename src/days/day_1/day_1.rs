@@ -2,6 +2,8 @@ use std::fs;
 use std::time::Instant;
 
 pub fn day_1_main() -> String{
+    let time_before = Instant::now();
+
     // Get contents, do lazy unwrap because we know the file is there and the values are all u32.
     let contents = fs::read_to_string("src/days/day_1/input1.txt")
                       .unwrap()
@@ -9,8 +11,6 @@ pub fn day_1_main() -> String{
                       .map(|x| x.trim().parse::<u32>().unwrap())
                       .collect::<Vec<u32>>();
 
-    let time_before = Instant::now();
-    
     // Part one
     let larger_part_1 = get_larger_count(&contents);
 
