@@ -5,33 +5,72 @@ use crate::Answer;
 pub fn day_3_main() -> Answer{
     let time_before = Instant::now();
 
-    let contents = fs::read_to_string("src/days/day_3/input1.txt")
+    // Get the lines out
+    let lines = fs::read_to_string("src/days/day_3/input1.txt")
                     .unwrap()
                     .split("\n")
-                    .map(|x| x.trim().to_string().chars().map(|x| x.to_digit(10).unwrap()).collect::<Vec<u32>>())
-                    .collect::<Vec<Vec<u32>>>();
+                    .map(|line| line.trim().to_string())
+                    .collect::<Vec<String>>();
 
-    let bits_len = contents.first().unwrap().len();
-    let majority_target = (contents.len()/2) as u32;
-    let mut common:Vec<usize> = vec![];
-    let mut uncommon:Vec<usize> = vec![];
+    let line_len = lines[0].len();
 
-    for i in 0..bits_len{
-        let sum = contents.iter().map(|x| x.get(i).unwrap()).sum::<u32>();
-        if sum > majority_target{
-            common.push(2_usize.pow((bits_len-i-1) as u32));
-            uncommon.push(0);
+    // Turn the all of the lines into a big vec of u32
+    let bits = lines.iter().map(|line| line.chars().map(|chr| chr.to_digit(10).unwrap())).flatten().collect::<Vec<u32>>();
+
+
+    // Transpose the array into columns
+    let mut columns:Vec<Vec<u32>> = vec![];
+    for i in 0..line_len{
+        columns.push(bits.iter()
+                         .skip(i)
+                         .step_by(line_len)
+                         .map(|x| *x)
+                         .collect::<Vec<u32>>());
+    }
+
+    // Part 1
+    // Find find the highest frequency in each column
+    let mut common:Vec<u32> = vec![];
+    for val in columns.iter().map(|column| column.iter().sum::<u32>()){
+        if val > (lines.len() / 2) as u32{
+            common.push(1);
         }
         else{
             common.push(0);
-            uncommon.push(2_usize.pow((bits_len-i-1) as u32));
         }
     }
 
-    let part_1 = common.iter().sum::<usize>() * uncommon.iter().sum::<usize>();
-
+    // Calculate answer
+    let part_1 = vec_to_num(&common) * vec_to_num(&invert_vec(&common));
+    
+    // Part 2
     
     let duration = Instant::now() - time_before;
-
+    
     Answer{day:3, part_1:part_1.to_string(), part_2:"b".to_string(), duration:duration}
+}
+
+fn vec_to_num(vals:&Vec<u32>) -> u32{
+    let mut sum = 0;
+
+    for (i,val) in vals.iter().enumerate(){
+        sum += val * 2_u32.pow((vals.len()-i-1) as u32);
+    }
+
+    sum
+}
+
+fn invert_vec(vals:&Vec<u32>) -> Vec<u32>{
+    let mut return_vec:Vec<u32> = vec![];
+
+    for val in vals{
+        if *val >= 1{
+            return_vec.push(0)
+        }
+        else {
+            return_vec.push(1)
+        }
+    }
+
+    return_vec
 }
