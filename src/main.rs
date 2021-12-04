@@ -5,7 +5,10 @@ use std::time::Duration;
 use days::day_1::day_1::day_1_main;
 use days::day_2::day_2::day_2_main;
 use days::day_3::day_3::day_3_main;
+use days::day_4::day_4::day_4_main;
+
 use prettytable::{Table, Row, row, cell};
+
 
 pub struct Answer{
     day:u32,
@@ -36,6 +39,7 @@ fn main() {
     answers.push(day_1_main());
     answers.push(day_2_main());
     answers.push(day_3_main());
+    answers.push(day_4_main());
 
     for answer in &answers{
         table.add_row(answer.to_row());
