@@ -1,36 +1,13 @@
 use std::fs;
 use std::time::Instant;
 
-
-use ndarray::{Array2, Axis};
-
 use crate::Answer;
-#[derive(Clone)]
+
 struct BingoCard{
-    card:Array2<(bool,u32)>,
-    colcount:[u32;5],
-    rowcount:[u32;5],
-}
-
-impl BingoCard{
-
-    fn update_card(&mut self, num:u32) -> bool{
-
-        for ((row, col), (marked, val)) in self.card.indexed_iter_mut(){
-            if num == *val{
-                self.colcount[col] += 1;
-                self.rowcount[row] += 1;
-                *marked = true;
-                
-            }
-        }
-        
-        if self.colcount.contains(&5) || self.rowcount.contains(&5){
-            return true
-        }
-
-        false
-    }
+    card:Vec<(bool,u32)>,
+    won:bool,
+    winning_val:u32,
+    win_pos:i32
 }
 
 pub fn day_4_main() -> Answer{
@@ -38,69 +15,72 @@ pub fn day_4_main() -> Answer{
 
     let contents = fs::read_to_string("src/days/day_4/input1.txt").unwrap();
 
+    // Get the numbers from the first line of the file
     let numberlist = contents.split("\n").next().unwrap().split(',').map(|x| x.trim().parse::<u32>().unwrap()).collect::<Vec<u32>>();
     let cards_strings = contents.split("\n\r").map(|card| card.to_string()).skip(1).collect::<Vec<String>>();
-    let mut card_vec:Vec<BingoCard> = vec![];
 
+    // Turn each card string into a BingoCard
+    // Parses numbers from a flattened version of the card and pairs each a marker flag with value before
+    // collecting and putting it into the BingoCard, which is then collected into the final BingoCard Vec
+    let mut cards = cards_strings.iter()
+                                                .map(|card| card.split_whitespace().map(|val| (false,val.parse::<u32>().unwrap())).collect::<Vec<(bool,u32)>>())
+                                                .map(|card| BingoCard{ card, won: false, winning_val:0, win_pos:-1 }) 
+                                                .collect::<Vec<BingoCard>>();
 
-    // Convert all of the card strings into a vec of bingo card structs
-    for card in cards_strings{
-        let mut arr = Array2::<(bool,u32)>::default((5,5));
-
-        let lines = card.trim().split("\n").map(|line| line.trim().split_whitespace().map(|val| val.trim().parse::<u32>().unwrap()).collect::<Vec<u32>>());
-        for (mut row, line) in arr.axis_iter_mut(Axis(0)).zip(lines){
-
-            for (i, col) in row.iter_mut().enumerate(){
-                *col = (false,*line.get(i).unwrap());
-            }
-        }
-
-        card_vec.push(BingoCard{card:arr, colcount: [0;5], rowcount: [0;5]});
-    }
-
-
-    // Copy cards for part 2
-    let mut card_vec_2 = card_vec.to_vec();
-
-    let mut won = false;
-    let mut part_1 = 0;
-
-
-    // Loop through the bingo numbers until we get a winner
-    for val in &numberlist{
-        for card in card_vec.iter_mut(){
-            if !won{
-                won = card.update_card(*val);
-
-                if won {
-                    let remaining = card.card.iter().filter(|val| !val.0).map(|val| val.1).sum::<u32>();
-                    part_1 = remaining * val;
-                }
-            }   
-        }
-    }
-
-
-    let mut part_2 = 0;
-
-    let mut had:Vec<usize> = vec![];
-
-    // Loop through all of the bingo numbers
     
-    for val in &numberlist{
-        println!("{}",val);
-        for (i,card) in card_vec_2.iter_mut().enumerate(){
-            won = card.update_card(*val);
-            
-            // Checks if the card has won before
-            if won && !had.contains(&i){
-                // Finds the remaining numbers by filtering ones that don't have markers on them
-                let remaining = card.card.iter().filter(|val| !val.0).map(|val| val.1).sum::<u32>();
-                part_2 = remaining * val;
-                had.push(i);
+    let mut win_counter = 0;
+
+    // Closure used in fold to check all values in the iterator are true
+    let fold_true = |state, (val,_):&(bool,u32)| state && *val;
+
+    // Loop through all of the numbers and check each bingo card against it
+    for val in numberlist{
+        for bingo_card in cards.iter_mut(){
+
+            // Marks the number on the card if found
+            for (used,num) in bingo_card.card.iter_mut(){
+                if num == &val{
+                    *used = true
+                }
+            }
+
+            // Only allow the card to win once
+            if !bingo_card.won{
+                // Gets length 5 chunks of the card and runs the fold_true closure
+                let won_rows = bingo_card.card.chunks(5).map(|line| line.iter().fold(true,fold_true )).collect::<Vec<bool>>().contains(&true);
+
+                let mut won_cols = false;
+                for x in 0..5{
+                    // Check columns for bingo with fold_true
+                    if bingo_card.card.iter().skip(x).step_by(5).fold(true, fold_true){
+                        won_cols = true
+                    
+                    }
+                }
+
+                // If we found a bingo
+                if won_cols || won_rows{
+
+                    // Mark the card as won and when it won
+                    bingo_card.won = true;
+                    bingo_card.win_pos = win_counter;
+
+                    // Calculate the score by finding the remaining numbers and multiplying 
+                    // it by the value that it won on
+                    let remaining = bingo_card.card.iter().filter(|(used,_)| !used).map(|(_,val)| val).sum::<u32>();
+                    bingo_card.winning_val = remaining * val;
+                    win_counter += 1;
+                }
             }
         }
     }
+
+    // Part one is found by looking for the card with winning pos 0
+    let part_1 = cards.iter().find(|card| card.win_pos == 0).unwrap().winning_val;
+
+    // Part 2 is found by finding the card with the largest win position
+    let part_2 = cards.iter().reduce(|a,b| if a.win_pos > b.win_pos {a} else {b}).unwrap().winning_val;
+
 
     let duration = Instant::now() - time_before;
 
