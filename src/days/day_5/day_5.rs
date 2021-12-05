@@ -2,6 +2,8 @@ use std::fs;
 use std::time::Instant;
 
 
+use ndarray::{Array2, ArrayBase, OwnedRepr};
+
 use crate::Answer;
 
 #[derive(Debug)]
@@ -44,25 +46,26 @@ pub fn day_5_main() -> Answer{
 
     
     // Get two empty vent maps
-    let mut vent_map_1 = (0..max_y+1).map(|_| vec![0;1 + max_x as usize]).collect::<Vec<Vec<i32>>>();
-    let mut vent_map_2 = (0..max_y+1).map(|_| vec![0;1 + max_x as usize]).collect::<Vec<Vec<i32>>>();
+    let mut vent_map_1 = Array2::<i32>::zeros(((max_x + 1) as usize, (max_y + 1) as usize));
+    let mut vent_map_2 = Array2::<i32>::zeros(((max_x + 1) as usize, (max_y + 1) as usize));
+    // let mut vent_map_2 = Array2::zeros((max_x as usize, max_y as usize));
 
     // For each line, find the points and add them to the map
     for line in lines.iter(){
         for point in calculate_line(&line){
             // Part 2
-            *vent_map_2.get_mut(point.1).unwrap().get_mut(point.0).unwrap() += 1;
+            vent_map_2[[point.0,point.1]] += 1;
 
             // Part 1, only add points which aren't diagonal
             if line.x1 == line.x2 || line.y1 == line.y2{
-                *vent_map_1.get_mut(point.1).unwrap().get_mut(point.0).unwrap() += 1;
+                vent_map_1[[point.0,point.1]] += 1;
             }
         }
     }
     
 
-    let part_1 = vent_map_1.iter().flatten().filter(|val| val >= &&2).count();
-    let part_2 = vent_map_2.iter().flatten().filter(|val| val >= &&2).count();
+    let part_1 = vent_map_1.iter().filter(|val| val >= &&2).count();
+    let part_2 = vent_map_2.iter().filter(|val| val >= &&2).count();
 
 
     let duration = Instant::now() - time_before;
