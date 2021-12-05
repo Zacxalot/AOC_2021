@@ -11,5 +11,6 @@ Here is my progress so far:
 | 2   | 1728414 | 1765720035 | 291μs    |
 | 3   | 3148794 | 2795310    | 744μs    |
 | 4   | 6592    | 31755      | 1022μs   |
+| 5   | 5092    | 20484      | 5424μs   |
 
-Total duration: 2230μs
+Total duration: 7577μs

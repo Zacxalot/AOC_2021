@@ -67,7 +67,7 @@ pub fn day_5_main() -> Answer{
 
     let duration = Instant::now() - time_before;
 
-    Answer{day:4, part_1:part_1.to_string(), part_2:part_2.to_string(), duration:duration}
+    Answer{day:5, part_1:part_1.to_string(), part_2:part_2.to_string(), duration:duration}
 }
 
 // Finds all of the points on the line
