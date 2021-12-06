@@ -2,7 +2,7 @@ use std::fs;
 use std::time::Instant;
 
 
-use ndarray::{Array2, ArrayBase, OwnedRepr};
+use ndarray::{Array2};
 
 use crate::Answer;
 

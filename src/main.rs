@@ -7,6 +7,7 @@ use days::day_2::day_2::day_2_main;
 use days::day_3::day_3::day_3_main;
 use days::day_4::day_4::day_4_main;
 use days::day_5::day_5::day_5_main;
+use days::day_6::day_6::day_6_main;
 
 use prettytable::{Table, Row, row, cell};
 
@@ -42,6 +43,7 @@ fn main() {
     answers.push(day_3_main());
     answers.push(day_4_main());
     answers.push(day_5_main());
+    answers.push(day_6_main());
 
     for answer in &answers{
         table.add_row(answer.to_row());
