@@ -12,87 +12,61 @@ pub fn day_8_main() -> Answer{
                       .split("\n")
                       .map(|line| line.split(&[' ','|','\r'][..])
                                            .filter(|val| val != &"")
-                                           .map(|val| val.to_string())
-                                           .collect::<Vec<String>>())
-                      .collect::<Vec<Vec<String>>>();
+                                           .map(|val| digit_chars_to_num(val))
+                                           .map(|val| (val,val.count_ones() as u8))
+                                           .collect::<Vec<(u8,u8)>>())
+                      .collect::<Vec<Vec<(u8,u8)>>>();
 
     let part_1 = contents.iter()
-                         .map(|line| line[10..14].iter().filter(|digit| [2,3,4,7].contains(&digit.len())).count())
+                         .map(|line| line[10..14].iter().filter(|(_,ones)| [2,3,4,7].contains(ones)).count())
                          .sum::<usize>();
 
-    for line in contents{
-        println!("{:?}",line);
-    }
-
-    let part_2 = "B";
+    let part_2 = contents.iter().map(|digits| deduce_values(digits)).sum::<u32>();
 
     let duration = Instant::now() - time_before;
 
     Answer{day:8, part_1:part_1.to_string(), part_2:part_2.to_string(), duration:duration}
 }
 
-fn str_to_digit(input:&str) -> char{
-    let len = input.len();
-    let contains_c = input.contains('c');
-    let contains_e = input.contains('e');
+fn deduce_values(digits:&Vec<(u8,u8)>) -> u32{
+    let mut values:[u8; 10] = [0;10];
+    
+    values[1] = digits.iter().find(|(_,ones)| ones == &2).unwrap().0;
+    values[4] = digits.iter().find(|(_,ones)| ones == &4).unwrap().0;
+    values[7] = digits.iter().find(|(_,ones)| ones == &3).unwrap().0;
+    values[8] = digits.iter().find(|(_,ones)| ones == &7).unwrap().0;
+    values[3] = digits.iter().find(|(val,ones)| ones == &5 && (val ^ values[1]).count_ones() == 3).unwrap().0;
+    values[9] = digits.iter().find(|(val,ones)| ones == &6 && (val ^ values[3]).count_ones() == 1).unwrap().0;
+    values[5] = digits.iter().find(|(val,ones)| ones == &5 && (val ^ values[9]).count_ones() == 1 && val != &values[3]).unwrap().0;
+    values[2] = digits.iter().find(|(val,ones)| ones == &5 && val != &values[3] && val != &values[5]).unwrap().0;
+    let c = values[2] & values[1];
+    values[6] = digits.iter().find(|(val,ones)| ones == &6 && val & c == 0).unwrap().0;
+    values[0] = digits.iter().find(|(val,ones)| ones == &6 && val != &values[9] && val != &values[6]).unwrap().0;
 
-    match (len,contains_c,contains_e){
-        (6,true,true)   => '0',
-        (2,_,_)         => '1',
-        (5,true,true)   => '2',
-        (5,true,false)  => '3',
-        (4,_,_)         => '4',
-        (5,false,false) => '5',
-        (6,false,true)  => '6',
-        (3,_,_)         => '7',
-        (7,_,_)         => '8',
-        (6,true,false)  => '9',
-        _ => 'X'
+    let mut digit_string = "".to_string();
+
+    for (digit,_) in digits[10..14].iter(){
+        digit_string += &values.iter().enumerate().find(|(_, val)| val == &digit).unwrap().0.to_string();
     }
+
+    digit_string.parse::<u32>().unwrap()
 }
 
-#[test]
-fn str_to_digit_test(){
-    assert_eq!('0',str_to_digit("abcefg"));
-    assert_eq!('1',str_to_digit("cf"));
-    assert_eq!('2',str_to_digit("acdeg"));
-    assert_eq!('3',str_to_digit("acdfg"));
-    assert_eq!('4',str_to_digit("bcdf"));
-    assert_eq!('5',str_to_digit("abdfg"));
-    assert_eq!('6',str_to_digit("abdefg"));
-    assert_eq!('7',str_to_digit("acf"));
-    assert_eq!('8',str_to_digit("abcdefg"));
-    assert_eq!('9',str_to_digit("abcdfg"));
+fn digit_chars_to_num(line:&str) -> u8{
+    let mut out:u8 = 0;
+
+    for char in line.chars(){
+        out += match char{
+            'a' => 0b1000000,
+            'b' => 0b0100000,
+            'c' => 0b0010000,
+            'd' => 0b0001000,
+            'e' => 0b0000100,
+            'f' => 0b0000010,
+            'g' => 0b0000001,
+            _ => 0b1111111
+        }
+    }
+
+    out
 }
-
-
-/*
-ab      = 1
-abd     = 7
-abef    = 4
-bcdef   = 5
-acdfg   = 2
-abcdf   = 3
-abcdef  = 9
-bcdefg  = 6
-abcdeg  = 0
-abcdefg = 8
-
-
-// Implement this!
-find 3 (5 chars, superset of 1) - abcdf
-find 9 (6 chars, superset of 3) - abcdef
-find 5 (5 chars, subset of 9) - bcdef
-find 2 (5 chars, not equal to 3 or 9) - acdfg
-find what maps to c (2 AND 1) -> a
-find 6 (6 characters, doesn't have a mapping to c (a in this case)) - abcdeg
-find 0 (6 characters, not equal to 9 or 6)
-
-d => a      7 take 1
-ef => bd    4 take 1
-
-
-5 3 5 3
-bcdef abcdf bcdef abcdf
-cdfeb fcadb cdfeb cdbaf
-*/
