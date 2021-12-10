@@ -22,6 +22,7 @@ pub fn day_10_main() -> Answer{
     let mut invalid_chars:Vec<char> = vec![];
     let mut incomplete_vals:Vec<u64> = vec![];
 
+    // Runs is_valid_line on each line and sorts results into appropriate vecs
     for line in lines.iter().map(|line| is_valid_line(line)){
         match line {
             SyntaxLineResult::Invalid(c) => invalid_chars.push(c),
@@ -29,12 +30,14 @@ pub fn day_10_main() -> Answer{
         }
     }
 
+    // Converts chars into their score and sums them
     let part_1 = invalid_chars.iter()
                                   .map(|c| match c {')' => 3,']' => 57,'}' => 1197,'>' => 25137, _ =>  0})
                                   .sum::<u64>();
 
+    // Sorts the incomplete values vec and returns the middle one
     incomplete_vals.sort();
-    let part_2 = incomplete_vals.get(incomplete_vals.len()/2).unwrap();
+    let part_2 = incomplete_vals[incomplete_vals.len()/2];
 
 
     let duration = Instant::now() - time_before;
@@ -48,6 +51,8 @@ fn is_valid_line(line:&String) -> SyntaxLineResult{
     let mut valid = true;
     let mut invalid_char = ' ';
 
+    // Checks to see if the line is valid or not
+    // Keeps track of what chunk openings are waiting by pushing them to last_open_vec
     for c in line.chars(){
         if valid{
             match c {
@@ -60,9 +65,10 @@ fn is_valid_line(line:&String) -> SyntaxLineResult{
             }
         }
     }
-
-
+    
     if valid{
+        // If the value is valid, it is incomplete
+        // We reverse the list and loop through each item doing total += total * 5 + val
         last_open_vec.reverse();
         let incomplete = last_open_vec.iter()
                                           .map(|c| match c {'(' => 1, '[' => 2, '{' => 3, '<' => 4, _ => 0})
@@ -70,6 +76,8 @@ fn is_valid_line(line:&String) -> SyntaxLineResult{
         return SyntaxLineResult::Incomplete(incomplete)
     }
     else{
+        // If it's invalid, we return the character that failed us
+        // "You have failed me for the last time admiral"
         return SyntaxLineResult::Invalid(invalid_char)
     }
 }
