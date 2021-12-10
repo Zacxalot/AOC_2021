@@ -3,6 +3,12 @@ use std::time::Instant;
 
 use crate::Answer;
 
+#[derive(Debug)]
+enum SyntaxLineResult{
+    Invalid(char),
+    Incomplete(u64)
+}
+
 pub fn day_10_main() -> Answer{
     let time_before = Instant::now();
 
@@ -13,19 +19,23 @@ pub fn day_10_main() -> Answer{
                                  .map(|line| line.trim().to_owned())
                                  .collect::<Vec<String>>();
 
+    let mut invalid_chars:Vec<char> = vec![];
+    let mut incomplete_vals:Vec<u64> = vec![];
 
-    println!("{:?}", is_valid_line(&"[{[{({}]{}}([{[{{{}}([]".to_owned()));
+    for line in lines.iter().map(|line| is_valid_line(line)){
+        match line {
+            SyntaxLineResult::Invalid(c) => invalid_chars.push(c),
+            SyntaxLineResult::Incomplete(v) => incomplete_vals.push(v),
+        }
+    }
 
+    let part_1 = invalid_chars.iter()
+                                  .map(|c| match c {')' => 3,']' => 57,'}' => 1197,'>' => 25137, _ =>  0})
+                                  .sum::<u64>();
 
-    let part_1 = lines.iter()
-         .map(|line| is_valid_line(line))
-         .filter(|opt| opt.is_some())
-         .map(|opt| opt.unwrap())
-         .inspect(|c| println!("{}",c))
-         .map(|c| match c {')' => 3,']' => 57,'}' => 1197,'>' => 25137, _ =>  0})
-         .sum::<u32>();
+    incomplete_vals.sort();
+    let part_2 = incomplete_vals.get(incomplete_vals.len()/2).unwrap();
 
-    let part_2 = "B";
 
     let duration = Instant::now() - time_before;
 
@@ -33,7 +43,7 @@ pub fn day_10_main() -> Answer{
 }
 
 
-fn is_valid_line(line:&String) -> Option<char>{
+fn is_valid_line(line:&String) -> SyntaxLineResult{
     let mut last_open_vec:Vec<char> = vec![];
     let mut valid = true;
     let mut invalid_char = ' ';
@@ -53,9 +63,13 @@ fn is_valid_line(line:&String) -> Option<char>{
 
 
     if valid{
-        return None
+        last_open_vec.reverse();
+        let incomplete = last_open_vec.iter()
+                                          .map(|c| match c {'(' => 1, '[' => 2, '{' => 3, '<' => 4, _ => 0})
+                                          .fold(0,|acc,val| acc * 5 + val);
+        return SyntaxLineResult::Incomplete(incomplete)
     }
     else{
-        return Some(invalid_char)
+        return SyntaxLineResult::Invalid(invalid_char)
     }
 }
