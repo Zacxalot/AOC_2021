@@ -1,4 +1,3 @@
-use core::num;
 use std::{fs};
 use std::time::Instant;
 
@@ -24,8 +23,11 @@ pub fn day_11_main() -> Answer{
 
     // println!("{:?}",num_map.slice(s![0..2,0..-40.min(10).max(0)]));
 
+    let mut sync_pos = 0;
+    let mut step_counter = 0;
 
-    for _ in 0..100{
+    while sync_pos == 0 || step_counter < 100{
+        step_counter += 1;
         num_map += 1;
 
         let mut set_to_flash:Vec<(usize,usize)> = vec![];
@@ -61,6 +63,10 @@ pub fn day_11_main() -> Answer{
 
         num_map.iter_mut().for_each(|v| if *v > 9 {*v = 0});
 
+
+        if num_map.iter().sum::<u32>() == 0{
+            sync_pos = step_counter;
+        }
         // println!("{:?}", num_map);
 
 
@@ -71,14 +77,9 @@ pub fn day_11_main() -> Answer{
 
 
     let part_1 = flash_count;
-    let part_2 = "B";
+    let part_2 = sync_pos;
 
     let duration = Instant::now() - time_before;
 
     Answer{day:10, part_1:part_1.to_string(), part_2:part_2.to_string(), duration:duration}
-}
-
-
-fn get_slice(pos:(usize,usize)){
-    
 }
