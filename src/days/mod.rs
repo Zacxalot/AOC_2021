@@ -9,3 +9,4 @@ pub(crate) mod day_8;
 pub(crate) mod day_9;
 pub(crate) mod day_10;
 pub(crate) mod day_11;
+pub(crate) mod day_12;
