@@ -8,6 +8,7 @@ use crate::Answer;
 pub fn day_12_main() -> Answer{
     let time_before = Instant::now();
 
+    // Get all of the pairs from the list
     let pairs = fs::read_to_string("src/days/day_12/input1.txt")
         .unwrap()
         .split("\n")
@@ -26,11 +27,8 @@ pub fn day_12_main() -> Answer{
         if val[0] != "start"{
             key2.push(&val[0]);
         }
-        
-        
     }
 
-    
 
     let mut paths_to_check = point_paths.get("start").unwrap().iter().map(|v| vec!["start",v]).collect::<Vec<Vec<&str>>>();
 
