@@ -1,89 +1,107 @@
-use std::collections::HashMap;
-use std::fs;
+use std::collections::{HashMap, HashSet};
 use std::time::Instant;
-
+use std::{fs, vec};
 
 use crate::Answer;
 
-pub fn day_12_main() -> Answer{
+enum Node<'a> {
+    Upper(&'a str),
+    Lower(&'a str),
+}
+
+pub fn day_12_main() -> Answer {
     let time_before = Instant::now();
+
+    let mut mapped_pairs: HashMap<&String, Vec<(&String, bool)>> = HashMap::new();
 
     // Get all of the pairs from the list
     let pairs = fs::read_to_string("src/days/day_12/input1.txt")
         .unwrap()
-        .split("\n")
-        .map(|line| line.trim().split("-").map(|s| s.to_owned()).collect::<Vec<String>>()).collect::<Vec<Vec<String>>>();
+        .split('\n')
+        .map(|line| {
+            line.trim()
+                .split('-')
+                .map(|s| s.to_owned())
+                .collect::<Vec<String>>()
+        })
+        .collect::<Vec<Vec<String>>>();
 
-    let mut point_paths:HashMap<&str,Vec<&str>> = HashMap::new();
+    let mut node_set: HashSet<String> = HashSet::new();
 
-    for val in pairs.iter(){
-        let key1 = point_paths.entry(&val[0]).or_insert(vec![]);
-        if val[1] != "start"{
-            key1.push(&val[1]);
-        }
-        
-        
-        let key2 = point_paths.entry(&val[1]).or_insert(vec![]);
-        if val[0] != "start"{
-            key2.push(&val[0]);
-        }
+    for pair in &pairs {
+        node_set.insert(pair[0].to_owned());
+        node_set.insert(pair[1].to_owned());
     }
 
+    for node in &node_set {
+        mapped_pairs.insert(node, vec![]);
+    }
 
-    let mut paths_to_check = point_paths.get("start").unwrap().iter().map(|v| vec!["start",v]).collect::<Vec<Vec<&str>>>();
+    for pair in &pairs {
+        let val_l = node_set.get(&pair[0]).unwrap();
+        let val_r = node_set.get(&pair[1]).unwrap();
 
-    let mut paths = 0;
+        let val_l_upper = val_l.chars().next().unwrap().is_uppercase();
+        let val_r_upper = val_r.chars().next().unwrap().is_uppercase();
 
-    while paths_to_check.len() > 0{
-        let next_path = paths_to_check.pop().unwrap();
-        
-        for potential_destinations in point_paths.get(next_path.last().unwrap()){
-            for destination in potential_destinations{
-                if *destination == "end"{
-                    paths += 1;
-                }
-                else if destination.chars().next().unwrap().is_uppercase() || !next_path.contains(destination){
-                    let mut path = next_path.clone();
-                    path.push(destination);
-                    paths_to_check.push(path);
-                }
+        mapped_pairs
+            .get_mut(val_l)
+            .unwrap()
+            .push((val_r, val_r_upper));
+
+        mapped_pairs
+            .get_mut(val_r)
+            .unwrap()
+            .push((val_l, val_l_upper));
+    }
+
+    let mut current_path: Vec<&String> = vec![];
+    let mut to_check_stack: Vec<Vec<&String>> = vec![];
+    let mut total = 0;
+
+    let start = node_set.get("start").unwrap();
+
+    to_check_stack.push(vec![start]);
+
+    while !to_check_stack.is_empty() {
+        let back_of_to_check = to_check_stack.last_mut().unwrap();
+        let next_node = back_of_to_check.pop().unwrap();
+
+        if next_node == "end" {
+            total += 1;
+        } else {
+            // Get potential next nodes in the path
+            let get_potentials = mapped_pairs.get(next_node).unwrap();
+            {
+                let filtered_potentials = get_potentials
+                    .iter()
+                    .filter(|(node, upper)| *upper || !current_path.contains(node))
+                    .map(|(node, _upper)| *node)
+                    .collect::<Vec<&String>>();
+
+                // println!("{:?}", filtered_potentials);
+
+                to_check_stack.push(filtered_potentials);
             }
+
+            current_path.push(next_node);
+        }
+
+        while !to_check_stack.is_empty() && to_check_stack.last().unwrap().is_empty() {
+            to_check_stack.pop();
+            current_path.pop();
         }
     }
 
-
-    let mut paths_to_check = point_paths.get("start").unwrap().iter().map(|v|( vec!["start",v],false)).collect::<Vec<(Vec<&str>,bool)>>();
-
-    let mut paths2 = 0;
-
-    while paths_to_check.len() > 0{
-        let next_path = paths_to_check.pop().unwrap();
-        
-        for potential_destinations in point_paths.get(next_path.0.last().unwrap()){
-            for destination in potential_destinations{
-                if *destination == "end"{
-                    // println!("{:?}",next_path);
-                    paths2 += 1;
-                }
-                else if destination.chars().next().unwrap().is_uppercase() || !next_path.0.contains(destination){
-                    let mut path = next_path.clone();
-                    path.0.push(destination);
-                    paths_to_check.push(path);
-                }
-                else if next_path.1 == false{
-                    let mut path = next_path.clone();
-                    path.0.push(destination);
-                    path.1 = true;
-                    paths_to_check.push(path);
-                }
-            }
-        }
-    }
-
-    let part_1 = paths;
-    let part_2 = paths2;
+    let part_1 = total;
+    let part_2 = 0;
 
     let duration = Instant::now() - time_before;
 
-    Answer{day:12, part_1:part_1.to_string(), part_2:part_2.to_string(), duration:duration}
+    Answer {
+        day: 12,
+        part_1: part_1.to_string(),
+        part_2: part_2.to_string(),
+        duration,
+    }
 }

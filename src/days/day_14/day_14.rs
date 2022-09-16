@@ -41,7 +41,7 @@ pub fn day_14_main() -> Answer {
             .unwrap();
         }
         new_line += &current_string[current_string.len() - 1..current_string.len()];
-        println!("{}", new_line);
+        // println!("{}", new_line);
         current_string = new_line;
     }
 
