@@ -4,11 +4,6 @@ use std::{fs, vec};
 
 use crate::Answer;
 
-enum Node<'a> {
-    Upper(&'a str),
-    Lower(&'a str),
-}
-
 pub fn day_12_main() -> Answer {
     let time_before = Instant::now();
 
@@ -58,8 +53,10 @@ pub fn day_12_main() -> Answer {
     let mut current_path: Vec<&String> = vec![];
     let mut to_check_stack: Vec<Vec<&String>> = vec![];
     let mut total = 0;
+    let mut dup_total = 0;
 
     let start = node_set.get("start").unwrap();
+    let mut is_dup = false;
 
     to_check_stack.push(vec![start]);
 
@@ -68,14 +65,25 @@ pub fn day_12_main() -> Answer {
         let next_node = back_of_to_check.pop().unwrap();
 
         if next_node == "end" {
-            total += 1;
+            if !is_dup {
+                total += 1;
+            }
+            dup_total += 1;
         } else {
+            if current_path.contains(&next_node)
+                && !&next_node.chars().next().unwrap().is_uppercase()
+            {
+                is_dup = true;
+            }
+
             // Get potential next nodes in the path
             let get_potentials = mapped_pairs.get(next_node).unwrap();
             {
                 let filtered_potentials = get_potentials
                     .iter()
-                    .filter(|(node, upper)| *upper || !current_path.contains(node))
+                    .filter(|(node, upper)| {
+                        *upper || !current_path.contains(node) || (!is_dup && *node != "start")
+                    })
                     .map(|(node, _upper)| *node)
                     .collect::<Vec<&String>>();
 
@@ -85,16 +93,23 @@ pub fn day_12_main() -> Answer {
             }
 
             current_path.push(next_node);
+
+            // println!("{:?} - is dup {}", current_path, is_dup);
         }
 
         while !to_check_stack.is_empty() && to_check_stack.last().unwrap().is_empty() {
             to_check_stack.pop();
-            current_path.pop();
+
+            if let Some(node) = current_path.pop() {
+                if current_path.contains(&node) && !node.chars().next().unwrap().is_uppercase() {
+                    is_dup = false
+                }
+            }
         }
     }
 
     let part_1 = total;
-    let part_2 = 0;
+    let part_2 = dup_total;
 
     let duration = Instant::now() - time_before;
 
