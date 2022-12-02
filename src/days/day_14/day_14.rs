@@ -58,31 +58,45 @@ pub fn day_14_main() -> Answer {
         *counts.entry(pair).or_default() += 1;
     }
 
-    for _i in 0..40 {
-        let mut changes: HashMap<String, usize> = HashMap::new();
-        let mut total_count = 0;
-        for (key, count) in &counts {
-            total_count += count;
-            let (map_1, map_2) = mappings.get(key).unwrap();
+    let mut part_1 = 0;
 
-            // println!("{:?} && {:?}", map_1, map_2);
-            *changes.entry(map_1.clone()).or_default() += count;
-            *changes.entry(map_2.clone()).or_default() += count;
-        }
-
-        println!();
-
-        for (key, change) in &changes {
-            *counts.entry(key.to_owned()).or_default() += change;
-        }
-
-        counts.clear();
-
-        for (key, count) in &changes {
-            counts.insert(key.to_owned(), *count);
+    for i in 0..40 {
+        counts = iterate(&counts, &mappings);
+        if i == 9 {
+            part_1 = counts_to_answer(&counts, &first_and_last);
         }
     }
 
+    let part_2 = counts_to_answer(&counts, &first_and_last);
+
+    let duration = Instant::now() - time_before;
+
+    Answer {
+        day: 14,
+        part_1: part_1.to_string(),
+        part_2: part_2.to_string(),
+        duration,
+    }
+}
+
+fn iterate(
+    counts: &HashMap<String, usize>,
+    mappings: &HashMap<String, (String, String)>,
+) -> HashMap<String, usize> {
+    let mut changes: HashMap<String, usize> = HashMap::new();
+    let mut total_count = 0;
+    for (key, count) in counts {
+        total_count += count;
+        let (map_1, map_2) = mappings.get(key).unwrap();
+
+        *changes.entry(map_1.clone()).or_default() += count;
+        *changes.entry(map_2.clone()).or_default() += count;
+    }
+
+    changes
+}
+
+fn counts_to_answer(counts: &HashMap<String, usize>, first_and_last: &[char; 2]) -> usize {
     let mut char_counts: HashMap<char, usize> = HashMap::new();
 
     for (key, count) in counts {
@@ -103,21 +117,5 @@ pub fn day_14_main() -> Answer {
 
     let mut sorted = char_counts.values().collect::<Vec<&usize>>();
     sorted.sort();
-
-    // println!("{:?}",)
-
-    let result = *sorted.last().unwrap() - *sorted.first().unwrap();
-
-    let part_1 = "A";
-
-    let part_2 = result.to_string();
-
-    let duration = Instant::now() - time_before;
-
-    Answer {
-        day: 14,
-        part_1: part_1.to_string(),
-        part_2: part_2.to_string(),
-        duration,
-    }
+    *sorted.last().unwrap() - *sorted.first().unwrap()
 }
